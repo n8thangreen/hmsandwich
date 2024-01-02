@@ -1,10 +1,9 @@
 
-# hmsandwich
+# hmsandwich <img align="right" src="cartoon-sandwich-ham.png" width="100">
 
 <!-- badges: start -->
 [![Project Status: Concept – Minimal or no implementation has been done yet, or the repository is only intended to be a limited example, demo, or proof-of-concept.](https://www.repostatus.org/badges/latest/concept.svg)](https://www.repostatus.org/#concept)
 <!-- badges: end -->
-<img align="right" src="cartoon-sandwich-ham.png" width="100">
 
 The goal of hmsandwich is to provide wrapper functions for the `hmer` package for a minimal workflow.
 
