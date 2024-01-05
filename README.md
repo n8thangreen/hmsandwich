@@ -42,3 +42,5 @@ We may end up using `R6` so that the wave running steps would look like
 ```r
 gono_hmer@run_wave
 ```
+
+Once the wave is run then visualisation can be run separately.
