@@ -41,7 +41,8 @@ run_wave <- function(x,
         range = x$ranges_in,               # min, max inputs
         emulator_type = "deterministic",
         order = 2)
-
+    
+    return(x)
   } else {
     pre_wave <- paste0("wave", x$wave_no - 1)
     
@@ -71,5 +72,7 @@ run_wave <- function(x,
         range = x$ranges_in,
         emulator_type = "deterministic",
         order = 2)
+        
+    return(x)
   }
 }
