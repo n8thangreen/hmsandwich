@@ -34,7 +34,7 @@ run_wave <- function(x,
     return(x) 
   } else if (x$wave == 1){
     
-    x[[wave_name]]$ems <-
+    x$wave1$ems <-
       emulator_from_data(
         input_data = x$wave0$training,     # named inputs and outputs from full model
         output_names = names(x$targets),
