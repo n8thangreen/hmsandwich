@@ -18,10 +18,27 @@ devtools::install_github("n8thangreen/hmsandwich")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example of what a workflow may look like:
 
 ``` r
 library(hmsandwich)
-## basic example code
+
+# create analysis object
+gono_hmer <- 
+  hmer_analysis() |> 
+  add_input_ranges(names, data) |> 
+  add_targets(names, data) |> 
+  add_model(gono_model)
+
+# run initial wave
+gono_hmer <- run_wave(gono_hmer)
+
+# run first wave
+gono_hmer <- run_wave(gono_hmer)
 ```
 
+We may end up using `R6` so that the wave running steps would look like
+
+```r
+gono_hmer@run_wave
+```
