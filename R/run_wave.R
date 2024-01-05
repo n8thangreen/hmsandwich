@@ -25,7 +25,7 @@ run_wave <- function(x,
                                indx_in = x$indx_in,
                                indx_out = x$indx_out))
     
-    x$wave0$data <- inp_out_df(init_points, init_results)
+    x$wave0$data <- inp_out_df(x$wave0$inputs, x$wave0$results)
     
     # split data set
     x$wave0$training <- x$wave0$data[1:x$n_sim, ]
@@ -45,7 +45,7 @@ run_wave <- function(x,
   } else {
     pre_wave <- paste0("wave", x$wave_no - 1)
     
-    x[[wave_name]]$points <-
+    x[[pre_wave]]$inputs <-
       generate_new_design(x[[wave_name]]$ems,
                           n_points = 60,
                           x$targets,
@@ -56,10 +56,17 @@ run_wave <- function(x,
                                       x$model,
                                       indx_in = x$indx_in,
                                       indx_out = x$indx_out))
+        
+    x[[wave_name]]$data <- inp_out_df(x[[pre_wave]]$inputs,
+                                      x[[wave_name]]$results)
+    
+    # split data set
+    x[[wave_name]]$training <- x[[wave_name]]$data[1:x$n_sim, ]
+    x[[wave_name]]$validation <- x[[wave_name]]$data[(x$n_sim+1):nrow(x[[wave_name]]$data), ]
     
     x[[wave_name]]$ems <-
       emulator_from_data(
-        input_data = xx[[pre_wave]]$training,
+        input_data = xx[[wave_name]]$training,
         output_names = names(x$targets),
         range = x$ranges_in,
         emulator_type = "deterministic",
