@@ -5,6 +5,9 @@
 # https://www.tmwr.org/workflows.html
 
 
+# input data from previous gonorrhoea analysis
+load("../../ICON/gono model/gonoHistoryMatching/data/all_input_parameters.RData")
+
 # create analysis object
 gono_hmer <- 
   hmer_analysis() |> 
