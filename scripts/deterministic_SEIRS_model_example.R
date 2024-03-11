@@ -1,6 +1,60 @@
 # deterministic SEIRS model example
 # https://danny-sc.github.io/determ_workshop/index.html
 
+library(hmer)
+library(deSolve)
+library(ggplot2)
+library(reshape2)
+library(purrr)
+library(tidyverse)
+library(lhs)
+
+set.seed(123)
+
+###################
+# HELPER FUNCTIONS
+
+# `ode_results` provides us with the solution of the differential equations for a given 
+# set of parameters. This function assumes an initial population of 
+# 900 susceptible individuals, 100 exposed individuals, and no infectious 
+# or recovered individuals.
+ode_results <- function(parms, end_time = 365*2) {
+  forcer = matrix(c(0, parms['beta1'], 100, parms['beta2'], 180, parms['beta2'], 270, parms['beta3']),
+                  ncol = 2,
+                  byrow = TRUE)
+  force_func = approxfun(
+    x = forcer[, 1],
+    y = forcer[, 2],
+    method = "linear",
+    rule = 2)
+  
+  des <- function(time, state, parms) {
+    with(as.list(c(state, parms)), {
+      dS <- b*(S+E+I+R)-force_func(time)*I*S/(S+E+I+R) + omega*R - mu*S
+      dE <- force_func(time)*I*S/(S+E+I+R) - epsilon*E - mu*E
+      dI <- epsilon*E - alpha*I - gamma*I - mu*I
+      dR <- gamma*I - omega*R - mu*R
+      return(list(c(dS, dE, dI, dR)))
+    })
+  }
+  yini <- c(S = 900, E = 100, I = 0, R = 0)
+  times <- seq(0, end_time, by = 1)
+  
+  deSolve::ode(yini, times, des, parms)
+}
+
+# `get_results` acts as `ode_results`, but has the additional feature 
+# of allowing us to decide which outputs and times should be returned. 
+# For example, to obtain the number of infected and susceptible individuals 
+# at t=25 and t=50, we would set `times=c(25,50)` and `outputs=c('I','S')`.
+get_results <- function(params, times, outputs) {
+  t_max <- max(times)
+  all_res <- ode_results(params, t_max)
+  actual_res <- all_res[all_res[,'time'] %in% times, c('time', outputs)]
+  shaped <- reshape2::melt(actual_res[,outputs])
+  return(setNames(shaped$value, paste0(shaped$Var2, actual_res[,'time'], sep = "")))
+}
+
 example_params <- c(
   b = 1/(60*365),
   mu = 1/(76*365),
@@ -10,6 +64,7 @@ example_params <- c(
   gamma = 0.08,
   omega = 0.003
 )
+
 solution <- ode_results(example_params)
 par(mar = c(2, 2, 2, 2))
 plot(solution)
@@ -73,6 +128,8 @@ vd <- validation_diagnostics(ems_wave1$R200, validation = validation, targets = 
 sigmadoubled_emulator <- ems_wave1$R200$mult_sigma(2)
 vd <- validation_diagnostics(sigmadoubled_emulator, 
                              validation = validation, targets = targets, plt=TRUE)
+
+##TODO: error
 for (j in 1:length(ems)) {
       misclass <- nrow(classification_diag(ems[[j]], targets, validation, plt = FALSE))
       while(misclass > 0) {
@@ -80,7 +137,9 @@ for (j in 1:length(ems)) {
         misclass <- nrow(classification_diag(ems[[j]], targets, validation, plt = FALSE))
       }
 }
+
 bad.ems <- c()
+##TODO: error
 for (j in 1:length(ems)) {
           bad.model <- nrow(comparison_diag(ems[[j]], targets, validation, plt = FALSE))
           if (bad.model > floor(nrow(validation)/10)) {
@@ -99,40 +158,44 @@ space_removed(ems_wave1, targets, ppd=3) + geom_vline(xintercept = 3, lty = 2) +
 
 # second wave
 R_squared_new <- list()
+
+##TODO: error
 for (i in 1:length(ems_wave2)) {
   R_squared_new[[i]] <- summary(ems_wave2[[i]]$model)$adj.r.squared
 }
 names(R_squared_new) <- names(ems_wave2)
 unlist(R_squared_new)
 
- ems_wave1_linear <- emulator_from_data(training, names(targets), 
-                                        ranges, quadratic=FALSE,
-                                        specified_priors = list(hyper_p = rep(0.55, length(targets))))
- R_squared_linear <- list()
- for (i in 1:length(ems_wave1_linear)) {
-   R_squared_linear[[i]] <- summary(ems_wave1_linear[[i]]$model)$adj.r.squared
- }
- names(R_squared_linear) <- names(ems_wave1_linear)
- unlist(R_squared_linear)
+ems_wave1_linear <- emulator_from_data(training, names(targets), 
+                                       ranges, quadratic=FALSE,
+                                       specified_priors = list(hyper_p = rep(0.55, length(targets))))
+R_squared_linear <- list()
+for (i in 1:length(ems_wave1_linear)) {
+  R_squared_linear[[i]] <- summary(ems_wave1_linear[[i]]$model)$adj.r.squared
+}
+names(R_squared_linear) <- names(ems_wave1_linear)
+unlist(R_squared_linear)
 
- emulator_plot(ems_wave1_linear$I200, plot_type = 'var', 
-               params = c('beta1', 'gamma'))
-
-emulator_plot(ems_wave1_linear$I200, plot_type = 'imp', targets = targets, 
-              params = c('beta1', 'gamma'), cb=TRUE)
-
-ems_wave1_linear$I200 <- ems_wave1_linear$I20$set_hyperparams(
-              list(theta=ems_wave1_linear$I200$corr$hyper_p$theta *3))
 emulator_plot(ems_wave1_linear$I200, plot_type = 'var', 
               params = c('beta1', 'gamma'))
 
 emulator_plot(ems_wave1_linear$I200, plot_type = 'imp', targets = targets, 
               params = c('beta1', 'gamma'), cb=TRUE)
+
+ems_wave1_linear$I200 <- ems_wave1_linear$I20$set_hyperparams(
+  list(theta=ems_wave1_linear$I200$corr$hyper_p$theta *3))
+emulator_plot(ems_wave1_linear$I200, plot_type = 'var', 
+              params = c('beta1', 'gamma'))
+
+emulator_plot(ems_wave1_linear$I200, plot_type = 'imp', targets = targets, 
+              params = c('beta1', 'gamma'), cb=TRUE)
+
+##TODO: error from here
 wave_points(list(initial_points, new_points, new_new_points), input_names = names(ranges), p_size=1)
 
 new_new_initial_results <- setNames(data.frame(t(apply(new_new_points, 1, 
-                                    get_results, c(25, 40, 100, 200, 300, 350), 
-                                    c('I', 'R')))), names(targets))
+                                                       get_results, c(25, 40, 100, 200, 300, 350), 
+                                                       c('I', 'R')))), names(targets))
 wave2 <- cbind(new_new_points, new_new_initial_results)
 
 all_points <- list(wave0, wave1, wave2)
