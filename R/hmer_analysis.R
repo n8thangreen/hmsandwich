@@ -1,7 +1,13 @@
 
-#
-hmer_analysis <- function() {
-  list(
+#' create an hmer object
+#' 
+#' @importFrom tibble lst
+#'
+hmer_analysis <- function(n_grps_in = NULL,
+                          groups_in = NULL,
+                          indx_out = NULL,
+                          full_groups_out = NULL) {
+  lst(
     wave_no = 0,
     n_grps_in,
     groups_in,

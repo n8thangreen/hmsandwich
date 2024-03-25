@@ -1,5 +1,10 @@
 
-#
+#' Run history matching and emulation
+#' 
+#' Depends on which wave.
+#' 
+#' @importFrom lhs maximinLHS
+#' 
 run_wave <- function(x,
                      sim = 100,
                      n_validation = 10) {
@@ -9,6 +14,7 @@ run_wave <- function(x,
   
   # initial wave
   if (x$wave == 0) {
+    # generate sample of input parameter values
     lhs_points <- lhs::maximinLHS(x$n_sim, x$n_grps_in)
     lhs_points_validation <- lhs::maximinLHS(x$n_validation, x$n_grps_in)
     
@@ -19,7 +25,7 @@ run_wave <- function(x,
     
     x$wave0$inputs <- rescale(x$ranges_in, init_points)
     
-    # run model
+    # run model to obtain output sample
     x$wave0$results <- t(apply(x$wave0$inputs, 1,
                                x$model,
                                indx_in = x$indx_in,
@@ -33,7 +39,7 @@ run_wave <- function(x,
     
     return(x) 
   } else if (x$wave == 1){
-    
+    # fit emulator model
     x$wave1$ems <-
       emulator_from_data(
         input_data = x$wave0$training,     # named inputs and outputs from full model
@@ -46,6 +52,7 @@ run_wave <- function(x,
   } else {
     pre_wave <- paste0("wave", x$wave_no - 1)
     
+    # sample new set of input parameter values
     x[[pre_wave]]$inputs <-
       generate_new_design(x[[wave_name]]$ems,
                           n_points = 60,
