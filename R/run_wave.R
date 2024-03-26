@@ -52,20 +52,20 @@ run_wave <- function(x,
   } else {
     pre_wave <- paste0("wave", x$wave_no - 1)
     
-    restricted_ems <- x$wave1$ems[c(1,2,3,4,7,8,9,10)]
-    
     # sample new set of input parameter values
     x[[pre_wave]]$inputs <-
       generate_new_design(x[[wave_name]]$ems, n_points = 180, x$targets, verbose=TRUE)
     
     # run model
-    x[[wave_name]]$results <- t(apply(x[[pre_wave]]$inputs, 1,
-                                      x$model,
-                                      indx_in = x$indx_in,
-                                      indx_out = x$indx_out))
-        
-    x[[wave_name]]$data <- inp_out_df(x[[pre_wave]]$inputs,
-                                      x[[wave_name]]$results)
+    x[[wave_name]]$results <-
+      setNames(data.frame(t(apply(x[[pre_wave]]$inputs, 1, 
+                                  x$model,
+                                  c(25, 40, 100, 200, 300, 350), 
+                                  c('I', 'R')))),
+               names(x$targets))
+    
+    x[[wave_name]]$data <- cbind(x[[pre_wave]]$inputs,
+                                 x[[wave_name]]$results)
     
     # split data set
     x[[wave_name]]$training <- x[[wave_name]]$data[1:x$n_sim, ]
@@ -73,9 +73,9 @@ run_wave <- function(x,
     
     x[[wave_name]]$ems <-
       emulator_from_data(
-        input_data = xx[[wave_name]]$training,
+        input_data = x[[wave_name]]$training,
         output_names = names(x$targets),
-        range = x$ranges_in,
+        range = x$ranges,
         emulator_type = "deterministic",
         order = 2)
         

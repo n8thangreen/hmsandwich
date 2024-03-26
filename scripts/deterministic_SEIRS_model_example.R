@@ -154,12 +154,61 @@ vd <- validation_diagnostics(sigmadoubled_emulator,
 restricted_ems <- ems_wave1[c(1,2,3,4,7,8,9,10)]
 new_points_restricted <- generate_new_design(restricted_ems, 180, targets, verbose=TRUE)
 
-# plots
-plot_wrap(new_points_restricted, ranges)
-space_removed(ems_wave1, targets, ppd=3) + geom_vline(xintercept = 3, lty = 2) + 
-  geom_text(aes(x=3, label="x = 3",y=0.33), colour="black", 
-            angle=90, vjust = 1.2, text=element_text(size=11))
+new_points <- generate_new_design(ems_wave1, 180, targets, verbose = TRUE)
 
+# plots
+
+plot_wrap(new_points, ranges)
+plot_wrap(new_points_restricted, ranges)
+
+space_removed(ems_wave1, targets, ppd=3) +
+  geom_vline(xintercept = 3, lty = 2) + 
+  geom_text(aes(x=3, label="x = 3",y=0.33),
+            colour = "black", 
+            angle = 90,
+            vjust = 1.2,
+            text = element_text(size=11))
+
+vd <- validation_diagnostics(ems_wave1, validation = validation, targets = targets, plt=TRUE)
+
+inflations <- c(1.5,1.5,1,1,1,1,1.5,1.5,2,2,1.5,2)
+for (i in 1:length(ems_wave1)) {
+  ems_wave1[[i]] <- ems_wave1[[i]]$mult_sigma(inflations[[i]])
+}
+
+new_points <- generate_new_design(ems_wave1, 180, targets, verbose = TRUE)
+
+plot_wrap(new_points, ranges)
+
+#
+
+new_initial_results <- setNames(data.frame(t(apply(new_points, 1, get_results, 
+                                                   c(25, 40, 100, 200, 300, 350),
+                                                   c('I', 'R')))), 
+                                names(targets))
+
+wave1 <- cbind(new_points, new_initial_results)
+
+new_t_sample <- sample(1:nrow(wave1), 90)
+new_training <- wave1[new_t_sample,]
+new_validation <- wave1[-new_t_sample,]
+
+ems_wave2 <- emulator_from_data(new_training, names(targets), ranges, 
+                                check.ranges=TRUE,
+                                specified_priors = list(hyper_p = rep(0.55, length(targets))))
+
+vd <- validation_diagnostics(ems_wave2, validation = new_validation, targets = targets, 
+                             plt=TRUE)
+
+inflations <- c(2,4,2,2,2,1,3,2,2,2,2,2)
+for (i in 1:length(ems_wave2)) {
+  ems_wave2[[i]] <- ems_wave2[[i]]$mult_sigma(inflations[[i]])
+}
+vd <- validation_diagnostics(ems_wave2, validation =  new_validation, targets = targets, plt=TRUE)
+
+new_new_points <- generate_new_design(c(ems_wave2, ems_wave1), 180, targets, verbose=TRUE)
+
+plot_wrap(new_new_points, ranges)
 
 R_squared_new <- list()
 
@@ -182,19 +231,24 @@ for (i in 1:length(ems_wave1_linear)) {
 names(R_squared_linear) <- names(ems_wave1_linear)
 unlist(R_squared_linear)
 
+# plots
+
 emulator_plot(ems_wave1_linear$I200, plot_type = 'var', 
               params = c('beta1', 'gamma'))
 
 emulator_plot(ems_wave1_linear$I200, plot_type = 'imp', targets = targets, 
               params = c('beta1', 'gamma'), cb=TRUE)
 
-ems_wave1_linear$I200 <- ems_wave1_linear$I20$set_hyperparams(
-  list(theta=ems_wave1_linear$I200$corr$hyper_p$theta *3))
+ems_wave1_linear$I200 <-
+  ems_wave1_linear$I20$set_hyperparams(
+    list(theta=ems_wave1_linear$I200$corr$hyper_p$theta *3))
+
 emulator_plot(ems_wave1_linear$I200, plot_type = 'var', 
               params = c('beta1', 'gamma'))
 
 emulator_plot(ems_wave1_linear$I200, plot_type = 'imp', targets = targets, 
               params = c('beta1', 'gamma'), cb=TRUE)
+
 
 ##TODO: error from here
 # wave_points(
@@ -209,6 +263,8 @@ emulator_plot(ems_wave1_linear$I200, plot_type = 'imp', targets = targets,
 # wave2 <- cbind(new_new_points, new_new_initial_results)
 # 
 # all_points <- list(wave0, wave1, wave2)
+#
+# # plots
 # simulator_plot(all_points, targets)
 # wave_values(all_points, targets, l_wid=1, p_size=1)
 

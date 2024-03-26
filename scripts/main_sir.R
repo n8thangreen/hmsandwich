@@ -5,6 +5,8 @@
 # https://www.tmwr.org/workflows.html
 
 
+##TODO: read from file?
+
 # input data
 ranges <- list(
   b = c(1e-5, 1e-4),       # birth rate
