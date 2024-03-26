@@ -56,8 +56,9 @@ ode_results <- function(parms, end_time = 365*2) {
   
   des <- function(time, state, parms) {
     with(as.list(c(state, parms)), {
-      dS <- b*(S+E+I+R)-force_func(time)*I*S/(S+E+I+R) + omega*R - mu*S
-      dE <- force_func(time)*I*S/(S+E+I+R) - epsilon*E - mu*E
+      # N <- S + E + I + R
+      dS <- b*(S+E+I+R) - force_func(time)*I*S / (S+E+I+R) + omega*R - mu*S
+      dE <- force_func(time)*I*S / (S+E+I+R) - epsilon*E - mu*E
       dI <- epsilon*E - alpha*I - gamma*I - mu*I
       dR <- gamma*I - omega*R - mu*R
       return(list(c(dS, dE, dI, dR)))
@@ -69,7 +70,7 @@ ode_results <- function(parms, end_time = 365*2) {
   deSolve::ode(yini, times, des, parms)
 }
 
-#' wrapper for `ode_results` to subset which outputs and times should be returned
+#' Wrapper for `ode_results` to subset which outputs and times should be returned
 #'
 #' For example, to obtain the number of infected and susceptible individuals 
 #' at t=25 and t=50
@@ -81,9 +82,11 @@ sir_model <- function(params, times, outputs) {
   t_max <- max(times)
   all_res <- ode_results(params, t_max)
   actual_res <- all_res[all_res[,'time'] %in% times, c('time', outputs)]
-  shaped <- reshape2::melt(actual_res[,outputs])
+  shaped <- reshape2::melt(actual_res[, outputs])
   
-  return(setNames(shaped$value, paste0(shaped$Var2, actual_res[,'time'], sep = "")))
+  names_shaped <- paste0(shaped$Var2, actual_res[,'time'], sep = "")
+
+  return(setNames(shaped$value, names_shaped))
 }
 
 ###########
