@@ -127,6 +127,7 @@ validation <- wave0[91:180,]
 ems_wave1 <- emulator_from_data(training, names(targets), ranges, 
                                 specified_priors = list(hyper_p = rep(0.55, length(targets))))
 
+# plots
 emulator_plot(ems_wave1$R200, params = c('beta1', 'gamma'))
 plot_actives(ems_wave1)
 emulator_plot(ems_wave1$R200, plot_type = 'var', params = c('beta1', 'gamma'))
@@ -146,25 +147,28 @@ sigmadoubled_emulator <- ems_wave1$R200$mult_sigma(2)
 vd <- validation_diagnostics(sigmadoubled_emulator, 
                              validation = validation, targets = targets, plt=TRUE)
 
-#################################################
+#########
+# wave 2
 
 # proposing new points
 restricted_ems <- ems_wave1[c(1,2,3,4,7,8,9,10)]
 new_points_restricted <- generate_new_design(restricted_ems, 180, targets, verbose=TRUE)
+
+# plots
 plot_wrap(new_points_restricted, ranges)
 space_removed(ems_wave1, targets, ppd=3) + geom_vline(xintercept = 3, lty = 2) + 
   geom_text(aes(x=3, label="x = 3",y=0.33), colour="black", 
             angle=90, vjust = 1.2, text=element_text(size=11))
 
-# second wave
+
 R_squared_new <- list()
 
 ##TODO: error
-for (i in 1:length(ems_wave2)) {
-  R_squared_new[[i]] <- summary(ems_wave2[[i]]$model)$adj.r.squared
-}
-names(R_squared_new) <- names(ems_wave2)
-unlist(R_squared_new)
+# for (i in 1:length(ems_wave2)) {
+#   R_squared_new[[i]] <- summary(ems_wave2[[i]]$model)$adj.r.squared
+# }
+# names(R_squared_new) <- names(ems_wave2)
+# unlist(R_squared_new)
 
 ems_wave1_linear <-
   emulator_from_data(training, names(targets), 
@@ -193,18 +197,18 @@ emulator_plot(ems_wave1_linear$I200, plot_type = 'imp', targets = targets,
               params = c('beta1', 'gamma'), cb=TRUE)
 
 ##TODO: error from here
-wave_points(
-  list(initial_points, new_points, new_new_points),
-  input_names = names(ranges),
-  p_size = 1)
-
-new_new_initial_results <-
-  setNames(data.frame(t(apply(new_new_points, 1, 
-                              get_results, c(25, 40, 100, 200, 300, 350), 
-                              c('I', 'R')))), names(targets))
-wave2 <- cbind(new_new_points, new_new_initial_results)
-
-all_points <- list(wave0, wave1, wave2)
-simulator_plot(all_points, targets)
-wave_values(all_points, targets, l_wid=1, p_size=1)
+# wave_points(
+#   list(initial_points, new_points, new_new_points),
+#   input_names = names(ranges),
+#   p_size = 1)
+# 
+# new_new_initial_results <-
+#   setNames(data.frame(t(apply(new_new_points, 1, 
+#                               get_results, c(25, 40, 100, 200, 300, 350), 
+#                               c('I', 'R')))), names(targets))
+# wave2 <- cbind(new_new_points, new_new_initial_results)
+# 
+# all_points <- list(wave0, wave1, wave2)
+# simulator_plot(all_points, targets)
+# wave_values(all_points, targets, l_wid=1, p_size=1)
 
