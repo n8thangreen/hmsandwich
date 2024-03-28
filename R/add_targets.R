@@ -1,6 +1,7 @@
 
 #' Add calibration targets
 #' @importFrom tibble lst
+#' @export
 #' 
 add_targets <- function(x, targets = NULL,
                         file = "Inputs/calibration_targets.txt") {

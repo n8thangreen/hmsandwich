@@ -1,6 +1,7 @@
 
 #' Add input ranges
 #' @importFrom tibble lst
+#' @export
 #' 
 add_input_ranges <- function(x, ranges = NULL) {
   # ranges <- 

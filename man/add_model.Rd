@@ -6,6 +6,9 @@
 \usage{
 add_model(x, model)
 }
+\arguments{
+\item{x}{}
+}
 \description{
 Add model
 }

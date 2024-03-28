@@ -2,6 +2,7 @@
 #' create an hmer object
 #' 
 #' @importFrom tibble lst
+#' @export
 #'
 hmer_analysis <- function(n_train = NULL,
                           n_grps_in = NULL,

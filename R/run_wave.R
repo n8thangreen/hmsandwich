@@ -6,6 +6,7 @@
 #' 
 #' @importFrom lhs maximinLHS
 #' @import hmer
+#' @export
 #' 
 run_wave <- function(x) {
   
